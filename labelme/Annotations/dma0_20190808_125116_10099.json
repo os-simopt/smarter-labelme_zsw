@@ -1,0 +1,46 @@
+{
+  "version": "5.2.2",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "fluggeraet_0000000000",
+      "points": [
+        [
+          424.7237569060773,
+          1831.0773480662983
+        ],
+        [
+          441.0220994475138,
+          1847.9281767955802
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "rectangle",
+      "flags": {
+        "disable_visual_tracking": false
+      }
+    },
+    {
+      "label": "fluggeraet_0000000001",
+      "points": [
+        [
+          3436.2784471218206,
+          236.14457831325302
+        ],
+        [
+          3473.360107095047,
+          290.896921017403
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "rectangle",
+      "flags": {
+        "disable_visual_tracking": false
+      }
+    }
+  ],
+  "imagePath": "../../../../../../../../birdy/BBR/data/preprocessing_birdrecorder_raw/images_cutout/01501-01750_nico_process/dma0_20190808_125116_10099.png",
+  "imageData": null,
+  "imageHeight": 2048,
+  "imageWidth": 4096
+}

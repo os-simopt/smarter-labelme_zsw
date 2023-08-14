@@ -134,11 +134,6 @@ def main():
         default=argparse.SUPPRESS,
     )
     parser.add_argument(
-        '--flagmodel',
-        help='Filename for flag classifier weights',
-        default=argparse.SUPPRESS,
-    )
-    parser.add_argument(
         '--dnndevice',
         help='Device to run Deep Neural Networks on - cpu or cuda',
         default=argparse.SUPPRESS,

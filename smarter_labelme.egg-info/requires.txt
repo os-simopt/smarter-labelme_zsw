@@ -1,0 +1,12 @@
+imgviz>=0.11.0
+matplotlib
+numpy
+Pillow>=2.8.0
+PyYAML
+qtpy
+termcolor
+opencv-contrib-python
+torch
+torchvision
+tqdm
+PyQt5

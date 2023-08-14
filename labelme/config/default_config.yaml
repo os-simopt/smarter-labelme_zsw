@@ -19,7 +19,6 @@ flag_dock:
   floatable: true
   movable: true
   show: true
-flagmodel: null
 flags: null
 image_skip: 15
 keep_prev: false
@@ -97,4 +96,4 @@ ssd_min_resolution: 300
 ssdmodel: null
 store_data: false
 validate_label: null
-version: 5.2.6
+version: 5.2.2

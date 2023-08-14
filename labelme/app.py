@@ -30,7 +30,7 @@ from labelme.widgets import ToolBar
 from labelme.widgets import UniqueLabelQListWidget
 from labelme.widgets import ZoomWidget
 
-from labelme.trackerre3 import Tracker, trackerAutoAnnotate, trackerInit, trackerDetectFlags, trackerFindGlobalOffset
+from labelme.trackerre3 import Tracker, trackerAutoAnnotate, trackerInit, trackerFindGlobalOffset
 
 here = osp.dirname(osp.abspath(__file__))
 # FIXME
@@ -48,18 +48,17 @@ LABEL_COLORMAP = imgviz.label_colormap(value=200)
 
 
 class MainWindow(QtWidgets.QMainWindow):
-
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = 0, 1, 2
-    delayedDraw=False,
+    delayedDraw = False,
 
     def __init__(
-        self,
-        config=None,
-        filename=None,
-        output=None,
-        output_file=None,
-        output_dir=None,
-        overlay_dir=None,
+            self,
+            config=None,
+            filename=None,
+            output=None,
+            output_file=None,
+            output_dir=None,
+            overlay_dir=None,
     ):
         if output is not None:
             logger.warning(
@@ -89,12 +88,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Main widgets and related state.
         if self._config['label_flags'] is None:
-            self._config['label_flags']= {'.*':['disable_visual_tracking','auto_flag']}
+            self._config['label_flags'] = {'.*': ['disable_visual_tracking']}
         else:
             if not '.*' in self._config['label_flags']:
-                self._config['label_flags']['.*']=['disable_visual_tracking','auto_flag']
+                self._config['label_flags']['.*'] = ['disable_visual_tracking']
             else:
-                for key in ['disable_visual_tracking','auto_flag']:
+                for key in ['disable_visual_tracking', ]:
                     if not key in self._config['label_flags']['.*']:
                         self._config['label_flags']['.*'].append(key)
 
@@ -155,7 +154,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fileListLayout = QtWidgets.QVBoxLayout()
         fileListLayout.setContentsMargins(0, 0, 0, 0)
         fileListLayout.setSpacing(0)
-        #fileListLayout.addWidget(self.fileSearch)
+        # fileListLayout.addWidget(self.fileSearch)
         fileListLayout.addWidget(self.fileListWidget)
         self.file_dock = QtWidgets.QDockWidget(self.tr(u'File List'), self)
         self.file_dock.setObjectName(u'Files')
@@ -377,9 +376,9 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         autoAnnotate = action(self.tr('AutoAnnotate'), self.autoAnnotate,
-                        shortcuts['autoAnnotate'], 'eye',
-                        self.tr('Automatically annotate all object instances visible'),
-                        enabled=False)
+                              shortcuts['autoAnnotate'], 'eye',
+                              self.tr('Automatically annotate all object instances visible'),
+                              enabled=False)
 
         undo = action(self.tr('Undo'), self.undoShapeEdit,
                       shortcuts['undo'], 'undo',
@@ -395,7 +394,7 @@ class MainWindow(QtWidgets.QMainWindow):
                          icon='eye', tip=self.tr('Show all polygons'),
                          enabled=False)
 
-        #help = action(self.tr('&Tutorial'), self.tutorial, icon='help',
+        # help = action(self.tr('&Tutorial'), self.tutorial, icon='help',
         #              tip=self.tr('Show tutorial page'))
 
         zoom = QtWidgets.QWidgetAction(self)
@@ -464,18 +463,18 @@ class MainWindow(QtWidgets.QMainWindow):
         fill_drawing.trigger()
 
         increase_blend = action(
-                self.tr('&Blend'),self.canvas.increase_blend,
-                shortcuts['increase_blend'],'feBlend-icon',
-                self.tr('Increase blending of NIR'),enabled=False,)
+            self.tr('&Blend'), self.canvas.increase_blend,
+            shortcuts['increase_blend'], 'feBlend-icon',
+            self.tr('Increase blending of NIR'), enabled=False, )
         decrease_blend = action(
-                self.tr('&De-Blend'),self.canvas.decrease_blend,
-                shortcuts['decrease_blend'],'feBlend-icon',
-                self.tr('Decrease blending of NIR'),enabled=False,)
+            self.tr('&De-Blend'), self.canvas.decrease_blend,
+            shortcuts['decrease_blend'], 'feBlend-icon',
+            self.tr('Decrease blending of NIR'), enabled=False, )
 
         toggle_tracker = action(
-                self.tr('&Track Polygon'),self.toggle_tracker,
-                shortcuts['toggle_tracker'],'tracker',
-                self.tr('Track polygon over frames'),enabled=False,checkable=True,)
+            self.tr('&Track Polygon'), self.toggle_tracker,
+            shortcuts['toggle_tracker'], 'tracker',
+            self.tr('Track polygon over frames'), enabled=False, checkable=True, )
 
         # Lavel list context menu.
         labelMenu = QtWidgets.QMenu()
@@ -513,7 +512,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # XXX: need to add some actions here to activate the shortcut
             editMenu=(
                 edit,
-                #copy,
+                # copy,
                 delete,
                 None,
                 undo,
@@ -521,7 +520,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 None,
                 addPointToEdge,
                 None,
-                #toggle_keep_prev_mode,
+                # toggle_keep_prev_mode,
             ),
             # menu shown at right click
             menu=(
@@ -535,7 +534,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 editMode,
                 edit,
                 autoAnnotate,
-                #copy,
+                # copy,
                 delete,
                 undo,
                 undoLastPoint,
@@ -564,7 +563,7 @@ class MainWindow(QtWidgets.QMainWindow):
             file=self.menu(self.tr('&File')),
             edit=self.menu(self.tr('&Edit')),
             view=self.menu(self.tr('&View')),
-            #help=self.menu(self.tr('&Help')),
+            # help=self.menu(self.tr('&Help')),
             recentFiles=QtWidgets.QMenu(self.tr('Open &Recent')),
             labelList=labelMenu,
         )
@@ -572,7 +571,7 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(
             self.menus.file,
             (
-                #open_,
+                # open_,
                 openNextImg,
                 openPrevImg,
                 opendir,
@@ -580,16 +579,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.menus.recentFiles,
                 save,
                 saveAs,
-                #saveAuto,
+                # saveAuto,
                 changeOutputDir,
-                #saveWithImageData,
+                # saveWithImageData,
                 close,
                 deleteFile,
                 None,
                 quit,
             ),
         )
-        #utils.addActions(self.menus.help, (help,))
+        # utils.addActions(self.menus.help, (help,))
         utils.addActions(
             self.menus.view,
             (
@@ -630,16 +629,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tools = self.toolbar('Tools')
         # Menu buttons on Left
         self.actions.tool = (
-            #open_,
+            # open_,
             opendir,
-            #openseg,
+            # openseg,
             openNextImg,
             openPrevImg,
-            #save,
-            #deleteFile,
+            # save,
+            # deleteFile,
             None,
             createRectangleMode,
-            #createAutoContourMode,
+            # createAutoContourMode,
             autoAnnotate,
             editMode,
             copy,
@@ -689,8 +688,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if filename is not None and osp.isdir(filename):
             if self.output_dir is None:
-                #Update to default output directory when directory changes!
-                self.output_dir = osp.join(filename,'Annotations')
+                # Update to default output directory when directory changes!
+                self.output_dir = osp.join(filename, 'Annotations')
                 if not osp.exists(self.output_dir):
                     os.makedirs(self.output_dir)
 
@@ -831,7 +830,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelList.clear()
         self.filename = None
         self.imagePath = None
-        #self.imageData = None
+        # self.imageData = None
         self.labelFile = None
         self.otherData = None
         self.canvas.resetState()
@@ -862,11 +861,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.loadShapes(self.canvas.shapes)
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
 
-    #def tutorial(self):
-        #url = 'https://github.com/wkentaro/labelme/tree/master/examples/tutorial'  # NOQA
-        #webbrowser.open(url)
-        #help_file = osp.join(here, 'doc/LabelMe.pdf')
-        #os.startfile(help_file)
+    # def tutorial(self):
+    # url = 'https://github.com/wkentaro/labelme/tree/master/examples/tutorial'  # NOQA
+    # webbrowser.open(url)
+    # help_file = osp.join(here, 'doc/LabelMe.pdf')
+    # os.startfile(help_file)
 
     def toggleDrawingSensitive(self, drawing=True):
         """Toggle drawing sensitive.
@@ -1018,12 +1017,10 @@ class MainWindow(QtWidgets.QMainWindow):
             ntext = shape.label
         else:
             ntext = '{} ({})'.format(shape.label, shape.group_id)
-        if shape.flags['auto_flag']==True:
-            trackerDetectFlags(self.image,[shape])
         if shape.flags is not None:
             for key in shape.flags:
                 if shape.flags[key]:
-                    ntext+=" {"+key+"}"
+                    ntext += " {" + key + "}"
         if not self.uniqLabelList.findItemsByLabel(shape.label):
             uitem = self.uniqLabelList.createItemFromLabel(shape.label)
             self.uniqLabelList.addItem(uitem)
@@ -1031,11 +1028,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.uniqLabelList.setItemLabel(uitem, shape.label, rgb)
         rgb = self._get_rgb_by_label(shape.label)
         if rgb is None:
-            rgb=(0,0,0)
+            rgb = (0, 0, 0)
         r, g, b = rgb
         item.setText(
             '{} <font color="#{:02x}{:02x}{:02x}">●</font>'
-            .format(ntext, r, g, b)
+                .format(ntext, r, g, b)
         )
         shape.line_color = QtGui.QColor(r, g, b)
         shape.vertex_fill_color = QtGui.QColor(r, g, b)
@@ -1045,26 +1042,24 @@ class MainWindow(QtWidgets.QMainWindow):
         shape.select_fill_color = QtGui.QColor(r, g, b, 155)
         self.setDirty()
         selectedFiles = self.fileListWidget.selectedItems();
-        if len(selectedFiles)>1:
-            #more than one file is selected, we also need to change the label in all other files, if it exists
-            oldfilename=self.filename
+        if len(selectedFiles) > 1:
+            # more than one file is selected, we also need to change the label in all other files, if it exists
+            oldfilename = self.filename
             for fileitem in selectedFiles[1:]:
                 currIndex = self.imageList.index(str(fileitem.text()))
                 if currIndex < len(self.imageList):
                     filename = self.imageList[currIndex]
                     if filename:
-                        self.loadFile(filename,reset=False)
+                        self.loadFile(filename, reset=False)
                         for clabel in self.labelList:
-                            cshape=clabel.shape()
+                            cshape = clabel.shape()
                             if cshape.label == oldtext:
-                                #change this label in the other file
-                                cshape.label=text
+                                # change this label in the other file
+                                cshape.label = text
                                 cshape.flags = flags
-                                if flags['auto_flag']==True:
-                                    trackerDetectFlags(self.image,[cshape])
                                 cshape.group_id = group_id
                                 self.setDirty()
-            self.loadFile(oldfilename,reset=False)
+            self.loadFile(oldfilename, reset=False)
 
     def fileSearchChanged(self):
         self.importDirImages(
@@ -1086,7 +1081,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if currIndex < len(self.imageList):
             filename = self.imageList[currIndex]
             if filename:
-                self.loadFile(filename,reset=False)
+                self.loadFile(filename, reset=False)
 
     # React to canvas signals.
     def shapeSelectionChanged(self, selected_shapes):
@@ -1114,7 +1109,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if shape.flags is not None:
             for key in shape.flags:
                 if shape.flags[key]:
-                    text+=" {"+key+"}"
+                    text += " {" + key + "}"
         label_list_item = LabelListWidgetItem(text, shape)
         self.labelList.addItem(label_list_item)
         if not self.uniqLabelList.findItemsByLabel(shape.label):
@@ -1133,7 +1128,7 @@ class MainWindow(QtWidgets.QMainWindow):
         r, g, b = rgb
         label_list_item.setText(
             '{} <font color="#{:02x}{:02x}{:02x}">●</font>'
-            .format(text, r, g, b)
+                .format(text, r, g, b)
         )
         shape.line_color = QtGui.QColor(r, g, b)
         shape.vertex_fill_color = QtGui.QColor(r, g, b)
@@ -1161,13 +1156,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.labelList.removeItem(item)
 
     def loadShapes(self, shapes, replace=True):
-        self.delayedDraw=True # prevent redrawing canvas 5 times for every single label added to the labellist
+        self.delayedDraw = True  # prevent redrawing canvas 5 times for every single label added to the labellist
         self._noSelectionSlot = True
         for shape in shapes:
             self.addLabel(shape)
         self.labelList.clearSelection()
         self._noSelectionSlot = False
-        self.delayedDraw=False
+        self.delayedDraw = False
         self.canvas.loadShapes(shapes, replace=replace)
 
     def loadLabels(self, shapes):
@@ -1234,7 +1229,7 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             imagePath = osp.relpath(
                 self.imagePath, osp.dirname(filename))
-            imageData = None#self.imageData if self._config['store_data'] else None
+            imageData = None  # self.imageData if self._config['store_data'] else None
             if osp.dirname(filename) and not osp.exists(osp.dirname(filename)):
                 os.makedirs(osp.dirname(filename))
             lf.save(
@@ -1342,14 +1337,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setScroll(orientation, value)
 
     def setScroll(self, orientation, value):
-        self.scrollBars[orientation].setValue(value)
+        self.scrollBars[orientation].setValue(int(round(value, 0)))
         self.scroll_values[orientation][self.filename] = value
 
     def setZoom(self, value):
         self.actions.fitWidth.setChecked(False)
         self.actions.fitWindow.setChecked(False)
         self.zoomMode = self.MANUAL_ZOOM
-        self.zoomWidget.setValue(value)
+        self.zoomWidget.setValue(int(round(value, 0)))
         self.zoom_values[self.filename] = (self.zoomMode, value)
 
     def addZoom(self, increment=1.1):
@@ -1399,7 +1394,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # changing fileListWidget loads file
         if (filename in self.imageList and
                 self.fileListWidget.currentRow() !=
-                self.imageList.index(filename) and reset==True):
+                self.imageList.index(filename) and reset == True):
             self.fileListWidget.setCurrentRow(self.imageList.index(filename))
             self.fileListWidget.repaint()
             return
@@ -1440,7 +1435,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.status(self.tr("Error reading %s") % label_file)
                 return False
 
-            #self.imageData = self.labelFile.imageData
+            # self.imageData = self.labelFile.imageData
             self.imagePath = osp.join(
                 osp.dirname(label_file),
                 self.labelFile.imagePath,
@@ -1454,13 +1449,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
             self.otherData = self.labelFile.otherData
         else:
-            #self.imageData = LabelFile.load_image_file(filename)
+            # self.imageData = LabelFile.load_image_file(filename)
             image = QtGui.QImage(filename)
             if not image.isNull():
                 self.imagePath = filename
             self.labelFile = None
 
-        #image = QtGui.QImage.fromData(self.imageData)
+        # image = QtGui.QImage.fromData(self.imageData)
         if image.isNull():
             formats = ['*.{}'.format(fmt.data().decode())
                        for fmt in QtGui.QImageReader.supportedImageFormats()]
@@ -1481,7 +1476,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self.overlay_dir is not None:
             fn = os.path.basename(filename)
-            ir_file = os.path.join(self.overlay_dir,fn)
+            ir_file = os.path.join(self.overlay_dir, fn)
             if not QtCore.QFile.exists(ir_file):
                 self.errorMessage(
                     self.tr('Error opening file'),
@@ -1489,15 +1484,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 )
             else:
                 aux_image = QtGui.QImage(ir_file)
-                #aux_image = aux_image.convertToFormat(QtGui.QImage.Format_Indexed8)
-                #aux_image.setColorTable(self.auxillary_color_table)
+                # aux_image = aux_image.convertToFormat(QtGui.QImage.Format_Indexed8)
+                # aux_image.setColorTable(self.auxillary_color_table)
 
-        #if self._config['keep_prev']:
+        # if self._config['keep_prev']:
         if self.tracker_dict:
             prev_shapes = self.canvas.shapes
 
         if not aux_image.isNull():
-            self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image),QtGui.QPixmap.fromImage(aux_image))
+            self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image), QtGui.QPixmap.fromImage(aux_image))
         else:
             self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image), QtGui.QPixmap())
 
@@ -1509,13 +1504,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.loadFlags(flags)
 
         if self.tracker_dict:
-            otrack_shapes=[]
+            otrack_shapes = []
             for shape in prev_shapes:
-                if shape.label not in [ a.label for a in self.canvas.shapes ] and shape.label in self.tracker_dict.keys():
+                if shape.label not in [a.label for a in self.canvas.shapes] and shape.label in self.tracker_dict.keys():
                     otrack_shapes.append(shape)
             if len(otrack_shapes):
                 track_shapes = self.track_shape(otrack_shapes)
-                trackerDetectFlags(self.image,track_shapes) 
                 self.loadShapes(track_shapes, replace=False)
                 self.setDirty()
             else:
@@ -1544,8 +1538,8 @@ class MainWindow(QtWidgets.QMainWindow):
         return True
 
     def resizeEvent(self, event):
-        if self.canvas and not self.image.isNull()\
-           and self.zoomMode != self.MANUAL_ZOOM:
+        if self.canvas and not self.image.isNull() \
+                and self.zoomMode != self.MANUAL_ZOOM:
             self.adjustScale()
         super(MainWindow, self).resizeEvent(event)
 
@@ -1600,13 +1594,13 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.mayContinue():
             self.loadFile(filename)
 
-    def openPrevImg(self,_value=False):
+    def openPrevImg(self, _value=False):
         if QtWidgets.QApplication.keyboardModifiers() == Qt.AltModifier:
-            self._openPrevImg(_value=_value,skip=self.image_skip)
+            self._openPrevImg(_value=_value, skip=self.image_skip)
         else:
-            self._openPrevImg(_value=_value,skip=1)
+            self._openPrevImg(_value=_value, skip=1)
 
-    def _openPrevImg(self,_value=False,skip=1):
+    def _openPrevImg(self, _value=False, skip=1):
         keep_prev = self._config['keep_prev']
         if Qt.KeyboardModifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
             self._config['keep_prev'] = True
@@ -1632,13 +1626,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._config['keep_prev'] = keep_prev
 
-    def openNextImg(self,_value=False,load=True):
+    def openNextImg(self, _value=False, load=True):
         if QtWidgets.QApplication.keyboardModifiers() == Qt.AltModifier:
-            self._openNextImg(_value=_value,load=load,skip=self.image_skip)
+            self._openNextImg(_value=_value, load=load, skip=self.image_skip)
         else:
-            self._openNextImg(_value=_value,load=load,skip=1)
+            self._openNextImg(_value=_value, load=load, skip=1)
 
-    def _openNextImg(self,_value=False,load=True, skip=1):
+    def _openNextImg(self, _value=False, load=True, skip=1):
         keep_prev = self._config['keep_prev']
         if Qt.KeyboardModifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
             self._config['keep_prev'] = True
@@ -1697,7 +1691,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QFileDialog.DontResolveSymlinks,
         )
         output_dir = str(output_dir)
-        if(output_dir != self.output_dir):
+        if (output_dir != self.output_dir):
             self.output_dir = output_dir
             self.updateFileListForOutputDirectory()
             self.openNextImg(load=True)
@@ -1773,6 +1767,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return label_file
 
     def deleteFile(self):
+        # return # FIXME Quick fix to avoid MessageBox
         mb = QtWidgets.QMessageBox
         msg = self.tr('You are about to permanently delete this label file, '
                       'proceed anyway?')
@@ -1838,14 +1833,15 @@ class MainWindow(QtWidgets.QMainWindow):
     def deleteSelectedShape(self):
         yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
         selectedFiles = self.fileListWidget.selectedItems();
-        msg = self.tr(
-            'You are about to permanently delete {} polygons in {} frames, '
-            'proceed anyway?'
-        ).format(len(self.canvas.selectedShapes),len(selectedFiles))
-        if yes == QtWidgets.QMessageBox.warning(
-                self, self.tr('Attention'), msg,
-                yes | no):
-            oldtext=[]
+        # msg = self.tr(
+        #    'You are about to permanently delete {} polygons in {} frames, '
+        #    'proceed anyway?'
+        # ).format(len(self.canvas.selectedShapes),len(selectedFiles))
+        # if yes == QtWidgets.QMessageBox.warning(
+        #        self, self.tr('Attention'), msg,
+        #        yes | no):
+        if True:  # Fixme Quickfix to avoid MessageBox
+            oldtext = []
             for shape in self.canvas.selectedShapes:
                 oldtext.append(shape.label)
             self.remLabels(self.canvas.deleteSelected())
@@ -1853,24 +1849,24 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.noShapes():
                 for action in self.actions.onShapesPresent:
                     action.setEnabled(False)
-            if len(selectedFiles)>1:
-                #more than one file is selected, we also need to change the label in all other files, if it exists
-                oldfilename=self.filename
+            if len(selectedFiles) > 1:
+                # more than one file is selected, we also need to change the label in all other files, if it exists
+                oldfilename = self.filename
                 for fileitem in selectedFiles[1:]:
                     currIndex = self.imageList.index(str(fileitem.text()))
                     if currIndex < len(self.imageList):
                         filename = self.imageList[currIndex]
                         if filename:
-                            self.loadFile(filename,reset=False)
-                            toRemove=[]
+                            self.loadFile(filename, reset=False)
+                            toRemove = []
                             for clabel in self.labelList:
-                                cshape=clabel.shape()
+                                cshape = clabel.shape()
                                 if cshape.label in oldtext:
                                     toRemove.append(cshape)
                             if len(toRemove):
                                 self.remLabels(toRemove)
                                 self.setDirty()
-                self.loadFile(oldfilename,reset=False)
+                self.loadFile(oldfilename, reset=False)
 
     def copyShape(self):
         self.canvas.endMove(copy=True)
@@ -1901,15 +1897,14 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QFileDialog.ShowDirsOnly |
             QtWidgets.QFileDialog.DontResolveSymlinks))
 
-        #Update to default output directory when directory changes!
-        output_dir = osp.join(targetDirPath,'Annotations')
+        # Update to default output directory when directory changes!
+        output_dir = osp.join(targetDirPath, 'Annotations')
         if not osp.exists(output_dir):
             os.makedirs(output_dir)
 
         self.output_dir = output_dir
 
         self.importDirImages(targetDirPath)
-
 
     def openOverlayDirDialog(self, _value=False, dirpath=None):
         if not self.mayContinue():
@@ -1982,7 +1977,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         label_available = []
         if osp.isdir(self.output_dir):
-            label_available = [ f for f in next(os.walk(self.output_dir))[2]]
+            label_available = [f for f in next(os.walk(self.output_dir))[2]]
 
         for i in range(self.fileListWidget.count()):
             item = self.fileListWidget.item(i)
@@ -1992,7 +1987,7 @@ class MainWindow(QtWidgets.QMainWindow):
             label_file = osp.basename(label_file)
 
             if label_file in label_available:
-            #LabelFile.is_label_file(osp.join(self.output_dir, label_file)):
+                # LabelFile.is_label_file(osp.join(self.output_dir, label_file)):
                 item.setCheckState(Qt.Checked)
             else:
                 item.setCheckState(Qt.Unchecked)
@@ -2004,18 +1999,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.fileListWidget.repaint()
 
-    def getFileIndex(self,file):
+    def getFileIndex(self, file):
         regex = re.compile(r'\d+')
         idx = regex.findall(file)
-        
+
         return float(idx[0])
 
-    def scanAllImages(self, folderPath, pattern = None):
+    def scanAllImages(self, folderPath, pattern=None):
         extensions = ['.%s' % fmt.data().decode("ascii").lower()
                       for fmt in QtGui.QImageReader.supportedImageFormats()]
         images = []
 
-        files = sorted(next(os.walk(folderPath))[2]) # walk only first level
+        files = sorted(next(os.walk(folderPath))[2])  # walk only first level
 
         for file in files:
             if file.lower().endswith(tuple(extensions)):
@@ -2025,13 +2020,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 if re.search(r'\d+', file):
                     images.append(relativePath)
                 else:
-                    self.errorMessage('Input files do not have \d+ regex','Failed to load some images!')
+                    self.errorMessage('Input files do not have \d+ regex', 'Failed to load some images!')
                     return []
 
-        images = sorted(images, key = self.getFileIndex)
+        images = sorted(images, key=self.getFileIndex)
         return images
 
-    def toggle_tracker(self,value):
+    def toggle_tracker(self, value):
         if value:
             self.start_tracker()
         else:
@@ -2045,16 +2040,16 @@ class MainWindow(QtWidgets.QMainWindow):
         assert not self.image.isNull(), "cannot init tracker with empty image"
 
         if not self.canvas.selectedShapes:
-            self.errorMessage('Tracker Error','Please select a polygon/s first!')
+            self.errorMessage('Tracker Error', 'Please select a polygon/s first!')
 
-        image = self.image #self.canvas.get_blend_image()
+        image = self.image  # self.canvas.get_blend_image()
 
         for shape in self.canvas.selectedShapes:
             tracker = Tracker()
             self.tracker_dict[shape.label] = tracker
 
         if len(self.tracker_dict) != len(self.canvas.selectedShapes):
-            self.errorMessage('Tracker Error','Failed to initialize some trackers!')
+            self.errorMessage('Tracker Error', 'Failed to initialize some trackers!')
 
     def stop_tracker(self):
         if not self.tracker_dict:
@@ -2066,15 +2061,15 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.tracker_dict:
             return shapes
 
-        #print(self.tracker_dict)
+        # print(self.tracker_dict)
 
-        primary = self.image #self.canvas.get_blend_image()
+        primary = self.image  # self.canvas.get_blend_image()
 
         track_shapes = []
 
         tracker_keys = self.tracker_dict.keys()
 
-        trackerFindGlobalOffset(self.previmage,primary)
+        trackerFindGlobalOffset(self.previmage, primary)
 
         for shape in shapes:
             tid = shape.label
@@ -2094,7 +2089,6 @@ class MainWindow(QtWidgets.QMainWindow):
         return track_shapes
 
     def autoAnnotate(self):
-        track_shapes=trackerAutoAnnotate(self.image,self.canvas.shapes)
+        track_shapes = trackerAutoAnnotate(self.image, self.canvas.shapes)
         self.loadShapes(track_shapes, replace=False)
         self.setDirty()
-

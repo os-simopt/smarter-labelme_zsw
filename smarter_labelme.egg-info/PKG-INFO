@@ -1,0 +1,23 @@
+Metadata-Version: 2.1
+Name: smarter-labelme
+Version: 5.2.2
+Summary: Smarter Image Annotation with Python and Re3
+Home-page: https://github.com/robot-perception-group/smarter-labelme
+Author: Eric Price
+Author-email: eric.price@tuebingen.mpg.de
+License: GPLv3
+Keywords: Image Annotation,Machine Learning
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+Refer to https://github.com/robot-perception-group/smarter-labelme for usage.

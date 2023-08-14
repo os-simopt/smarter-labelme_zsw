@@ -58,7 +58,8 @@ class SSD300(nn.Module):
 
         self.feature_extractor = backbone
 
-        self.label_num = 81  # number of COCO classes
+        # self.label_num = 81  # number of COCO classes
+        self.label_num = 83  # number of COCO minimodel classes
         self._build_additional_features(self.feature_extractor.out_channels)
         self.num_defaults = [4, 6, 6, 6, 4, 4]
         self.loc = []

@@ -11,7 +11,6 @@ import labelme.re3.bb_util as bb_util
 import labelme.re3.im_util as im_util
 import labelme.utils.ssdutils as ssdutils
 import labelme.utils.ssdmodel as model
-import labelme.utils.flagmodel as flagmodel
 
 import random
 from qtpy import QtCore
@@ -26,13 +25,13 @@ SSDTHRESHOLD=0.05
 SSDAUTOTHRESHOLD=0.15
 SSDMINIOU=0.8
 SSDALPHA=0.8
-COCOCLASS=['background','person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+# COCOCLASS=['background','person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+# COCOCLASS=['background','person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush', 'redkite', 'buzzard']
+COCOCLASS=['background','person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush', 'vogel', 'fluggeraet', 'vogeloderinsekt']
 SSDMULTIBOX=None
 DEVICE=None
 RE3MODEL=None
-CLASSIFIER=None
 CONFIG=None
-FLAGCLASS=None
 REFIMAGE=None
 CURIMAGE=None
 TRANSROTATION=None
@@ -369,7 +368,7 @@ class SSD():
 
         
 def trackerInit(config):
-    global SSDMULTIBOX,DEVICE,RE3MODEL,CONFIG,CLASSIFIER,FLAGCLASS
+    global SSDMULTIBOX,DEVICE,RE3MODEL,CONFIG
     #use a single instance of this, saves memory
     CONFIG=config
     if CONFIG['dnndevice'] is None:
@@ -386,17 +385,6 @@ def trackerInit(config):
         weights=torch.load(CONFIG['re3model'], map_location=lambda storage, loc: storage)
     RE3MODEL.load_state_dict(weights)
 
-    FLAGCLASS=[]
-    if CONFIG["flagmodel"] is None:
-        weights=None
-        CLASSIFIER=None
-    else:
-        weights=torch.load(CONFIG['flagmodel'], map_location=lambda storage, loc: storage)
-        CLASSIFIER=flagmodel.net(None,None,state_dict=weights).to(DEVICE)
-        CLASSIFIER.eval()
-        cs=CLASSIFIER.get_extra_state()
-        for c in cs:
-            FLAGCLASS.append(c)
 
 class Re3Tracker(object):
     def __init__(self, model_path = 'checkpoint.pth'):
@@ -645,34 +633,6 @@ def trackerFindGlobalOffset(aqimg,qimg):
         TRANSROTATION=None
 
 
-def trackerDetectFlags(qimg,shapes):
-    if CLASSIFIER is None:
-        return
-    mimg = ocvutil.qtImg2CvMat(qimg)
-    frame=torch.from_numpy(mimg).to(DEVICE).permute(2,0,1)[[2,1,0],:,:] * (1.0/255.0)
-    w=frame.shape[2]
-    h=frame.shape[1]
-    for shape in shapes:
-        if shape.flags['auto_flag']==True:
-            rect=getRectForTracker(mimg,shape)
-            x=int((rect[0]+rect[2])/2)
-            y=int((rect[1]+rect[3])/2)
-            w=rect[2]-rect[0]
-            h=rect[3]-rect[1]
-            if (w>h):
-                h=w
-            else:
-                w=h
-            w=int(w*1.42)
-            cframe=scale(crop(frame,[x,y,w,w]),[SSDSIZE,SSDSIZE])
-            result=CLASSIFIER(cframe.unsqueeze(0)).squeeze(0)
-            c=result.argmax().item()
-            for flag in FLAGCLASS:
-                if flag in shape.flags:
-                    shape.flags[flag]=False
-            if c:
-                shape.flags[FLAGCLASS[c]]=True
-
 def trackerAutoAnnotate(qimg,shapes):
     mimg = ocvutil.qtImg2CvMat(qimg)
     rects=[]
@@ -690,7 +650,5 @@ def trackerAutoAnnotate(qimg,shapes):
         shape.insertPoint(1,QtCore.QPoint(int(rect[1,0]),int(rect[1,1])))
         shape.insertPoint(2,QtCore.QPoint(int(rect[2,0]),int(rect[2,1])))
         id1+=1
-        shape.flags['auto_flag']=True
         newshapes.append(shape)
-    trackerDetectFlags(qimg,newshapes) # modifies newshapes
     return newshapes
