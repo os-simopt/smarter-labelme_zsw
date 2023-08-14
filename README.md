@@ -68,6 +68,7 @@ The annotations are saved as a [JSON](http://www.json.org/) file.
 ```bash
 smarter_labelme  # just open gui
 ```
+
 ### Neural Network weights.
 
 Smarter-labelme will automatically download pretrained network weights via torch.hub on the first start. They will be cashed in your local user directory and use approximately 200 Mb of space. You can use your own weights instead with the --ssdmodel and --re3model flags.
@@ -79,6 +80,26 @@ Smarter-labelme will automatically download pretrained network weights via torch
 - `--labels` allows to limit labels to a determined set, for example MSCOCO. The parameter can be a text file with one label per line or a comma-separated list.
 - `--flags` allows to specify per-image flags. The parameter can be a text file with one label per line or a comma-separated list.
 - `--labelflags` allows to specify per-annotation flags to give additional information beyond the label, for example for behavior annotation. The syntax is JSON with regular expressions, for example `--labelflags {.*: [occluded,running,walking,sleeping]}`. There is one internal labelflag - "disable_visual_tracking" which can be used to disable the automated visual tracker. Objects with this flag set will simply be copied to the next frame unchanged whenever `Track-Polygon` is engaged.
+
+
+### Make Combined Dataset
+run make_combined_dataset/make_combined_dataset_nico.py
+```
+--folder
+/birdy/BBR/data/preprocessing_birdrecorder_raw/birdrecorder-old_images_cutout
+/dat/PROJECTS/BBR2/Software/bbr2_machine-learning/SB_ds/sod4sb
+--destination_folder
+/birdy/BBR/data/preprocessing_birdrecorder_raw/2023-08-11_2250-65000-mixed-annotations_100000-samples_no-coco_single-class
+--min-anno-size
+15
+--single-class
+True
+--test-percentage
+40
+--datasize
+100000
+```
+
 
 ## Video annotation procedure with instance tracking.
 
