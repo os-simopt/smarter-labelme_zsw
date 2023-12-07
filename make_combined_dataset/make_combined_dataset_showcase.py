@@ -16,8 +16,6 @@ import torchvision
 import copy
 import shutil
 from tqdm import tqdm
-from glob import glob
-import random
 
 
 def add(array, key, num):
@@ -50,108 +48,41 @@ def crop(image, dimensions):
     return image[:, t:b, l:r]
 
 
-# define subclasses vogel, fluggeraet, vogeloderinsekt
-
-categories = {
-    "vogel": ["artnichterkennbar", "bussard", "entenvogel", "falke", 'greifvogel', 'grossvogel',
-              'habichtundsperber', 'kleinvogel', 'kolkrabe', 'kraehe', 'maeusebussard', 'milan',
-              'mittelgrosservogel', 'reiher', 'rotmilan', 'schwarzmilan', 'taube', 'turmfalke', 'vogel',
-              'wanderfalke', 'weihe', 'hawk', 'wildbird', 'crow'],
-    "fluggeraet": ["fluggeraet"],
-    "vogeloderinsekt": ["vogeloderinsekt", "insekt"],
-}
-
-
-def map_subclass_to_class(subclass):
-    for category, words in categories.items():
-        for word in words:
-            if subclass.lower().startswith(word):
-                return category
-    return "OTHER"
-
-
-def within_X_percent(dictionary, anno, percentage=0.05):
-    """
-    Check if all values in the dictionary are within a specified percentage deviation from the first value.
-
-    Args:
-        dictionary (dict): The input dictionary with string keys and numeric values.
-        anno (object): The current annotation object.
-        percentage (float): The percentage deviation allowed for all values in the dictionary.
-                            It should be a decimal number between 0 and 1.
-
-    Returns:
-        bool: True if all values are within the specified percentage deviation from the first value, otherwise False.
-    """
-    if len(dictionary) < len(categories):
-        return True
-    if not dictionary:
-        return False
-
-    # get min and max values in dictionary
-    values = list(dictionary.values())
-    max_value = max(values)
-    min_value = min(values)
-
-    # return false if unbalanced (x% deviation)
-    if (max_value - min_value) / max_value > percentage:
-        current_class = anno['class']['name']
-        current_min_class = min(dictionary, key=lambda k: dictionary[k])
-        if current_class != current_min_class:
-            return False
-
-    return True
-
-
 def main():
     parser = argparse.ArgumentParser(description='Create Behaviour Dataset from SmarterLabelme dataset')
     parser.add_argument('--folder', type=str, nargs='+', help='folder to analyse')
     parser.add_argument('--destination_folder', type=str, help='folder to store images and json')
+    parser.add_argument('--template_file', type=str, help='annotation template file')
     parser.add_argument('--width', type=int, help='dimensions for image', default=300)
     parser.add_argument('--height', type=int, help='dimensions for image', default=300)
-    parser.add_argument('--min-size', type=int, help='minimum size of a crop in pixels',
-                        default=150)
+    parser.add_argument('--min-size', type=int, help='minimum size of a crop in pixels', default=150)
     parser.add_argument('--datasize', type=int, help='how much data to create', default=20000)
     parser.add_argument('--random', type=int, help='random seed for dataset generation', default=1337)
     parser.add_argument('--classes', type=str, help='dictionary of optional class mappings', default="{}")
     parser.add_argument('--test-percentage', type=float, help='Percentage of data reserved for test set', default=5)
-    parser.add_argument('--min-anno-size', type=int, help='Minimum size for an annotation to be considered',
-                        default=5)
+    parser.add_argument('--min-anno-size', type=float, help='Minimum size for an annotation to be considered',
+                        default=3)
     parser.add_argument('--cocofolder', type=str, help='folder with coco dataset to combine with (only train)',
                         default="")
-    parser.add_argument('--single-class', type=bool, help='break down everything into one single class',
-                        default=False)
 
     args = parser.parse_args()
 
     rng = np.random.default_rng(seed=args.random)
 
     filelists = {}
-    # append just annotated folders
     for o in args.folder:
-        if 'birdrecorder-old' in o:
-            annotated_folders_list = glob(o + "/*_done")  # just using hand annotated files
-            # annotated_folders_list = glob(o + "/*") # using all files
-            for annotated_folder in annotated_folders_list:
-                args.folder.append(annotated_folder)
-            args.folder.remove(o)
-            break
-
-    for o in args.folder:
-        if not os.path.isdir(o + '/Annotations'): # for original Annotations
-        #if not os.path.isdir(o + '/Annotations_corr'):  # for corrected Annotations
+        if not os.path.isdir(o + '/Annotations'):
             print("Error: source annotation folder %s cannot be opened\n" % o)
             exit(1)
         try:
-            filelists[o] = sorted(
-                [f for f in os.listdir(o + '/Annotations') if (re.search("\.json$", f) is not None)])
+            filelists[o] = sorted([f for f in os.listdir(o + '/Annotations') if (re.search("\.json$", f) is not None)])
         except:
             print("Error: Could not get annotations from %s\n" % o)
             exit(1)
 
     if not os.path.isdir(args.destination_folder):
-        print("Error: destinationfolder %s will be created\n" % args.destination_folder)
-        os.mkdir(args.destination_folder)
+        print("Error: destinationfolder %s cannot be opened\n" % args.destination_folder)
+        os.makedirs(args.destination_folder)
     try:
         args_classes = json.loads(args.classes)
     except Exception as e:
@@ -162,7 +93,7 @@ def main():
         exit(1)
 
     ids = {}
-    template = json.load(open(os.path.abspath(os.path.dirname(__file__)) + '/template_birds.json'))
+    template = json.load(open(os.path.abspath(os.path.dirname(__file__)) + '/' + args.template_file))
     annotations = {'train2017': {}, 'val2017': {}}
     classes = {}
     dclasses = {}
@@ -170,33 +101,15 @@ def main():
         dclasses[c['name']] = c
 
     for o in filelists:
-        filelists[o].sort()
-        date_backup = ''
-        for f in tqdm(filelists[o]):
+        for f in filelists[o]:
             try:
-                if 'birdrecorder-old' in o:  # for selecting old birdrecorder data or other datasets
-                    # frame_id = int(re.search("([0-9]*)\.json", f)[1])
-                    frame_id = re.search("([0-9]{8})_([0-9]{6})_([0-9]{5})", f)  # our id consists of date + time + id
-                    frame_id = frame_id.group(1) + frame_id.group(2) + frame_id.group(3)
-                    date = frame_id[:8]
-                elif 'sod4sb' in o:  # small-object-detection-for-spotting-birds dataset
-                    frame_id = re.search("([0-9]{3})_([0-9]{5})", f)
-                    frame_id = frame_id.group(1) + frame_id.group(2)
-                    date = frame_id[:3]
-                else:
-                    print("Can't find Dataset!")
+                # frame_id = int(re.search("([0-9]*)\.json", f)[1]) # our id consists of date + time + id
+                frame_id = f.split('.')[0]
 
-                jdata = json.load(open(o + '/Annotations/' + f)) # for original Annotations
-                # jdata = json.load(open(o + '/Annotations_corr/' + f))  # for corrected Annotations
-
-                if date != date_backup:
-                    # set dataset split
-                    dset = 'train2017'
-                    if rng.random() * 100 < args.test_percentage:
-                        if 'birdrecorder-old' in o:  # FIXME NK: JUST USING BIRDRECORDER IMAGES AS VAL
-                            dset = 'val2017'
-                    date_backup = date
-
+                jdata = json.load(open(o + '/Annotations/' + f))
+                dset = 'train2017'
+                if rng.random() * 100 < args.test_percentage:
+                    dset = 'val2017'
                 annotations[dset][frame_id] = jdata
                 jdata['frame_id'] = frame_id
                 jdata['frame_file'] = f
@@ -215,17 +128,10 @@ def main():
                     for tc in dclasses:
                         if c.startswith(tc + ' '):
                             rc = dclasses[tc]
-                        else:
-                            # fix subclasses
-                            mapped_class = map_subclass_to_class(c)
-                            if mapped_class != 'OTHER':
-                                rc = dclasses[mapped_class]
-
                     if rc is not None:
                         shape['class'] = rc
                         jdata['useful_shapes'].append(shape)
                         add(classes, rc['name'], 1)
-
             except json.JSONDecodeError as e:
                 print(e)
                 continue
@@ -238,15 +144,6 @@ def main():
     print("Instances:")
     print(json.dumps(ids, indent=1))
 
-    # """ Balance Data """
-    # fill_classes_num = []
-    # max_class_num = max(classes.values())  # max class value in classes
-    # fill_classes_num = [max_class_num - value for key, value in
-    #                    classes.items()]  # create list of differences to max class value
-
-    ## just fill up
-    # while sum(fill_classes_num) > 0:  # solange nicht alle werte identisch
-
     da = {'train2017': copy.deepcopy(template), 'val2017': copy.deepcopy(template)}
     try:
         for dset in da:
@@ -258,12 +155,8 @@ def main():
     for dset in da:
         print("extracting framecrops for %s" % dset)
         annoid = 0
-        classes = {}
-        max_total_num = args.datasize if dset == 'train2017' else int(args.datasize * (args.test_percentage / 100))
-        # max_class_num = max_total_num // len(categories)
-        for cid in range(max_total_num):
+        for cid in range(args.datasize if dset == 'train2017' else int(args.datasize * (args.test_percentage / 100))):
             print(cid)
-            print(classes)
             found_annotations = 0
             while found_annotations == 0:
                 frameid = rng.choice(list(annotations[dset].keys()))
@@ -278,11 +171,6 @@ def main():
                 scalefactor = args.width / float(width)
 
                 for anno in frame['useful_shapes']:
-
-                    ## check if wanted class num is already reached # FXME NK: Just turned off, cause of sod4sb data
-                    # balanced = within_X_percent(classes, anno, 0.05)
-                    # if not balanced:
-                    #    break  # looking for next anno
 
                     bbox = [min(anno['points'][0][0], anno['points'][1][0]),
                             min(anno['points'][0][1], anno['points'][1][1]),
@@ -312,15 +200,10 @@ def main():
                         if (bbox[2] > args.min_anno_size and bbox[3] > args.min_anno_size):
                             # valid annotation found - add to list
                             found_annotations += 1
-                            add(classes, anno['class']['name'], 1)
                             newanno = {}
                             newanno["area"] = bbox[2] * bbox[3]
                             newanno["bbox"] = bbox
-                            if args.single_class:
-                                # newanno["category_id"] = 1  # if we are using just one class and no COCO
-                                newanno["category_id"] = 81  # if we are using just one class and COCO
-                            else:
-                                newanno["category_id"] = anno['class']['id']
+                            newanno["category_id"] = anno['class']['id']
                             newanno["id"] = annoid
                             newanno["ignore"] = 0
                             newanno["image_id"] = cid
@@ -330,16 +213,13 @@ def main():
                             annoid += 1
             # found and added annotations
             # image = loadImage(frame['frame_folder'] + '/Annotations/' + frame['imagePath']) # our images are in image folder
-            image = loadImage(frame['frame_folder'] + '/' + frame['imagePath'])
+            image = loadImage(frame['frame_folder'] + '/' + frame['imagePath'][2:])
             newimage = scale(crop(image, [offsetx, offsety, width, height]), [args.width, args.height])
             imagefilename = ('%06d.jpg' % cid)
             imagepath = args.destination_folder + '/' + dset + '/' + imagefilename
             saveImage(imagepath, newimage)
             newimagemeta = {'file_name': imagefilename, 'width': args.width, 'height': args.height, 'id': cid}
             da[dset]['images'].append(newimagemeta)
-
-        print("Classes:")
-        print(json.dumps(classes, indent=1))
 
         if dset == 'train2017' and args.cocofolder != "":
             print("adding coco")

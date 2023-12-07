@@ -66,7 +66,7 @@ shortcuts:
   increase_blend:
   - O
   open: null
-  open_dir: Ctrl+D
+  open_dir: Ctrl+Shift+D
   open_next:
   - Right
   - Alt+Right
@@ -95,7 +95,7 @@ sort_labels: true
 ssd_min_resolution: 50
 # ssdmodel: /dat/PROJECTS/BBR2/Software/bbr2_machine-learning/smarter-labelme-zsw/weights/epoch_64_kite-buzzard_train.pt
 # ssdmodel: /dat/PROJECTS/BBR2/Software/bbr2_machine-learning/ssd/checkpoints/2023-07-22_epoch_64_birds.pt
-ssdmodel: /dat/PROJECTS/BBR2/Software/bbr2_machine-learning/ssd/checkpoints/2023-08-02_2250-annotations_10000-samples_no-coco_single-class_epoch_54.pt
+ssdmodel: /dat/PROJECTS/BBR2/Software/bbr2_machine-learning/SSD/PyTorch/Detection/SSD/checkpoints/2023-08-02_2250-annotations_10000-samples_no-coco_single-class_epoch_54.pt
 store_data: false
 validate_label: null
 version: 5.2.1
