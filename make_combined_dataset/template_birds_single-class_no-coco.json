@@ -1,0 +1,13 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "avian",
+      "supercategory": "birds"
+    }
+  ],
+  "images": [],
+  "annotations": [],
+  "info": [],
+  "licenses": []
+}

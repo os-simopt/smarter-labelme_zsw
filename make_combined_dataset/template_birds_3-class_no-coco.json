@@ -1,0 +1,23 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "vogel",
+      "supercategory": "birds"
+    },
+    {
+      "id": 2,
+      "name": "fluggeraet",
+      "supercategory": "birds"
+    },
+    {
+      "id": 3,
+      "name": "vogeloderinsekt",
+      "supercategory": "birds"
+    }
+  ],
+  "images": [],
+  "annotations": [],
+  "info": [],
+  "licenses": []
+}
