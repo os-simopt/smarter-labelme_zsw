@@ -39,10 +39,10 @@ def get_template(single_class, cocofolder):
             open(os.path.abspath(os.path.dirname(__file__)) + '/template_birds_single-class_no-coco.json'))
     elif not single_class and cocofolder != "":
         template = json.load(
-            open(os.path.abspath(os.path.dirname(__file__)) + '/template_birds_3-class_no-coco.json'))
+            open(os.path.abspath(os.path.dirname(__file__)) + '/template_birds_3-class_coco.json'))
     elif not single_class and cocofolder == "":
         template = json.load(
-            open(os.path.abspath(os.path.dirname(__file__)) + '/template_birds_3-class_coco.json'))
+            open(os.path.abspath(os.path.dirname(__file__)) + '/template_birds_3-class_no-coco.json'))
     return template
 
 
