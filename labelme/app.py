@@ -177,6 +177,9 @@ class MainWindow(QtWidgets.QMainWindow):
             Qt.Vertical: scrollArea.verticalScrollBar(),
             Qt.Horizontal: scrollArea.horizontalScrollBar(),
         }
+        # callback to react on the scroll events (from either mouse wheel or moving the scroll bar
+        self.scrollBars[Qt.Horizontal].valueChanged.connect(self._on_horizontal_scrollbar_value_change)
+        self.scrollBars[Qt.Vertical].valueChanged.connect(self.on_vertical_scrollbar_value_change)
         self.canvas.scrollRequest.connect(self.scrollRequest)
 
         self.canvas.newShape.connect(self.newShape)
@@ -696,7 +699,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.importDirImages(filename, load=False)
         else:
             self.filename = filename
-
+        self.prev_filename = None
         if config['file_search']:
             self.fileSearch.setText(config['file_search'])
             self.fileSearchChanged()
@@ -731,6 +734,11 @@ class MainWindow(QtWidgets.QMainWindow):
         # if self.firstStart:
         #    QWhatsThis.enterWhatsThisMode()
 
+    # to store the current scroll bar values and reuse them on the next image
+    def _on_horizontal_scrollbar_value_change(self):
+        self.scroll_values[1][self.filename]=self.scrollBars[Qt.Horizontal].value()
+    def on_vertical_scrollbar_value_change(self):
+        self.scroll_values[2][self.filename]=self.scrollBars[Qt.Vertical].value()
     def menu(self, title, actions=None):
         menu = self.menuBar().addMenu(title)
         if actions:
@@ -1081,7 +1089,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if currIndex < len(self.imageList):
             filename = self.imageList[currIndex]
             if filename:
-                self.loadFile(filename, reset=False)
+                self.loadFile(filename, reset=False,prev_filename=self.prev_filename)
 
     # React to canvas signals.
     def shapeSelectionChanged(self, selected_shapes):
@@ -1389,7 +1397,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for item in self.labelList:
             item.setCheckState(Qt.Checked if value else Qt.Unchecked)
 
-    def loadFile(self, filename=None, reset=True):
+    def loadFile(self, filename=None, reset=True,prev_filename=None):
         """Load the specified file, or the last opened file if None."""
         # changing fileListWidget loads file
         if (filename in self.imageList and
@@ -1397,8 +1405,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.imageList.index(filename) and reset == True):
             self.fileListWidget.setCurrentRow(self.imageList.index(filename))
             self.fileListWidget.repaint()
-            return
 
+            
+            return
         self.resetState()
         self.canvas.setEnabled(False)
         if filename is None:
@@ -1495,7 +1504,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image), QtGui.QPixmap.fromImage(aux_image))
         else:
             self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image), QtGui.QPixmap())
-
         flags = {k: False for k in self._config['flags'] or []}
         if self.labelFile:
             self.loadLabels(self.labelFile.shapes)
@@ -1518,19 +1526,24 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setClean()
 
         self.canvas.setEnabled(True)
-        # set zoom values
+        # set zoom values according to the ones used for the previous filename
         is_initial_load = not self.zoom_values
-        if (self.filename in self.zoom_values) and not self._config['keep_prev_scale']:
-            self.zoomMode = self.zoom_values[self.filename][0]
-            self.setZoom(self.zoom_values[self.filename][1])
+        if (self.prev_filename in self.zoom_values) and self._config['keep_prev_scale']:
+
+        #    self.zoomMode = self.zoom_values[self.filename][0]
+            self.setZoom(self.zoom_values[self.prev_filename][1])
         elif is_initial_load or not self._config['keep_prev_scale']:
             self.adjustScale(initial=True)
-        # set scroll values
+        # set scroll values according to the ones we used for the previously seen file
         for orientation in self.scroll_values:
-            if self.filename in self.scroll_values[orientation] and not self._config['keep_prev_scale']:
-                self.setScroll(
-                    orientation, self.scroll_values[orientation][self.filename]
-                )
+            if self._config['keep_prev_scale']:
+                try:
+                    self.setScroll(
+                        orientation, self.scroll_values[orientation].pop(self.prev_filename)
+                    )
+                except KeyError:
+                    pass
+
         self.paintCanvas()
         self.addRecentFile(self.filename)
         self.toggleActions(True)
@@ -1620,9 +1633,14 @@ class MainWindow(QtWidgets.QMainWindow):
             filename = self.imageList[currIndex - skip]
         else:
             filename = self.imageList[0]
+        # store the file we previously looked at
+        # it is used as an index into the scrollbar history when setting the
+        # view on the next loaded image
+        self.prev_filename = self.filename
+        self.filename = filename
 
         if filename:
-            self.loadFile(filename)
+            self.loadFile(self.filename)
 
         self._config['keep_prev'] = keep_prev
 
@@ -1642,7 +1660,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if len(self.imageList) <= 0:
             return
-
         filename = None
         if self.filename is None:
             filename = self.imageList[0]
@@ -1652,6 +1669,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 filename = self.imageList[currIndex + skip]
             else:
                 filename = self.imageList[-1]
+        # store the file we previously looked at
+        # it is used as an index into the scrollbar history when setting the
+        # view on the next loaded image
+        self.prev_filename=self.filename
         self.filename = filename
 
         if self.filename and load:
