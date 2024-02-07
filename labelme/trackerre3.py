@@ -68,14 +68,6 @@ class SSD():
                 weights=weights['model']
             except:
                 pass
-        self.model.load_state_dict(weights)
-        self.model = self.model.to(self.device)
-        self.model.eval()
-        self.hardEmpty = torch.empty((0),dtype=self.precision,requires_grad=False).to(self.device)
-        self.hardZero = torch.zeros(1,dtype=torch.long,requires_grad=False).to(self.device)
-        self.dboxes = ssdutils.dboxes300_coco()
-        self.encoder = ssdutils.Encoder(self.dboxes)
-        self.resizer = torchvision.transforms.Resize((SSDSIZE,SSDSIZE),antialias=True,interpolation=torchvision.transforms.InterpolationMode.BICUBIC).to(self.device)
 
 
     def inference(self,prediction, min_conf=0.01, nms_iou=0.5):
