@@ -170,12 +170,12 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.canvas.zoomRequest.connect(self.zoomRequest)
 
-        scrollArea = QtWidgets.QScrollArea()
-        scrollArea.setWidget(self.canvas)
-        scrollArea.setWidgetResizable(True)
+        self.scrollArea = QtWidgets.QScrollArea()
+        self.scrollArea.setWidget(self.canvas)
+        self.scrollArea.setWidgetResizable(True)
         self.scrollBars = {
-            Qt.Vertical: scrollArea.verticalScrollBar(),
-            Qt.Horizontal: scrollArea.horizontalScrollBar(),
+            Qt.Vertical: self.scrollArea.verticalScrollBar(),
+            Qt.Horizontal: self.scrollArea.horizontalScrollBar(),
         }
         # callback to react on the scroll events (from either mouse wheel or moving the scroll bar
         self.scrollBars[Qt.Horizontal].valueChanged.connect(self._on_horizontal_scrollbar_value_change)
@@ -187,7 +187,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
         self.canvas.drawingPolygon.connect(self.toggleDrawingSensitive)
 
-        self.setCentralWidget(scrollArea)
+        self.setCentralWidget(self.scrollArea)
 
         features = QtWidgets.QDockWidget.DockWidgetFeatures()
         for dock in ['flag_dock', 'label_dock', 'shape_dock', 'file_dock']:
@@ -795,6 +795,55 @@ class MainWindow(QtWidgets.QMainWindow):
             title = '{} - {}*'.format(title, self.filename)
         self.setWindowTitle(title)
 
+    def keyPressEvent(self, ev):
+        key=ev.key()
+        # zoom in on a selected label upon key-stroke
+        if ev.modifiers() == QtCore.Qt.AltModifier and key == QtCore.Qt.Key_C:
+            if self.canvas.selectedShapes:
+                target_size = self._config.get(['fast_zoom_target_size'],0.1)
+                target_rectangle = self.canvas.selectedShapes[0]
+                zoom_factor_for_target = self.zoom_for_rectangle(target_rectangle, target_size)
+                self.setZoom(zoom_factor_for_target)
+                hor_scroll, vert_scroll = self.scroll_for_rectangle(target_rectangle)
+                self.setScroll(1, hor_scroll)
+                self.setScroll(2, vert_scroll)
+                self.scroll_for_rectangle(target_rectangle)
+
+    def zoom_for_rectangle(self, rectangle:Shape, percentage:float):
+        view_rect = (self.scrollArea.viewport().width(),self.scrollArea.viewport().height())
+        # these are the rectangle points in scroll area coordinates at current zoom level
+        upper_left_on_scroll_area = self.canvas.map_pixmap_point_to_scroll_area(rectangle.points[0].toPoint())
+        lower_right_on_scroll_area= self.canvas.map_pixmap_point_to_scroll_area(rectangle.points[1].toPoint())
+
+        current_rectangle_width=lower_right_on_scroll_area.x()-upper_left_on_scroll_area.x()
+        current_rectangle_height=lower_right_on_scroll_area.y()-upper_left_on_scroll_area.y()
+        try:
+            # this is the zoom delta we need to add to the current zoom factor
+            zoom_delta = min(view_rect[0] / current_rectangle_width * percentage,
+                              view_rect[1] / current_rectangle_height * percentage)
+            # have to multiply by 100 since the zoom widget works with percentage
+            # current zoom state is in self.canvas.scale
+            zoom_factor = self.canvas.scale * zoom_delta *100
+
+        except ZeroDivisionError:
+            # if the width or height of the selected shape is zero, we use the maximum zoom factor
+            # 1000 is the maximum zoom factor
+            # this corresponds to a scale of 10 for the canvas
+            zoom_factor = 1000
+        return zoom_factor
+
+    def scroll_for_rectangle(self, rectangle:Shape):
+        upper_left = rectangle.points[0]
+        horizontal_max=self.scrollBars[1].maximum()
+        horizontal_min=self.scrollBars[1].minimum()
+        # convex combination between min and max value of the scroll bar according to
+        # where the upper left corner of the shape is located in the image represented by the pixmap
+        hor_factor = upper_left.x()/self.canvas.pixmap.width()
+        hor_scroll = horizontal_min+hor_factor*(horizontal_max-horizontal_min)
+        vertical_min = self.scrollBars[2].minimum()
+        vertical_max = self.scrollBars[2].maximum()
+        vert_scroll = vertical_min+upper_left.y()/self.canvas.pixmap.height()*(vertical_max-vertical_min)
+        return hor_scroll,vert_scroll
     def setClean(self):
         self.dirty = False
         self.actions.save.setEnabled(False)
