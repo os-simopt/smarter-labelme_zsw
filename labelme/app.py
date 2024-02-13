@@ -800,7 +800,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # zoom in on a selected label upon key-stroke
         if ev.modifiers() == QtCore.Qt.AltModifier and key == QtCore.Qt.Key_C:
             if self.canvas.selectedShapes:
-                target_size = self._config.get(['fast_zoom_target_size'],0.1)
+                target_size = self._config.get('fast_zoom_target_size',0.1)
                 target_rectangle = self.canvas.selectedShapes[0]
                 zoom_factor_for_target = self.zoom_for_rectangle(target_rectangle, target_size)
                 self.setZoom(zoom_factor_for_target)
