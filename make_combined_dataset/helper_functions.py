@@ -6,17 +6,20 @@ import json
 
 def get_filelists(folder):
     filelists = {}
+    folder_done = []
+    folders_to_remove = []
     # append just annotated folders
     for o in folder:
         if 'birdrecorder-old' in o or 'birdrecorder-new' in o:
             annotated_folders_list = glob(o + "/*_done")  # just using hand annotated files
             # annotated_folders_list = glob(o + "/*") # using all files
             for annotated_folder in annotated_folders_list:
-                folder.append(annotated_folder)
-            folder.remove(o)
-            break
+                folder_done.append(annotated_folder)
+            folders_to_remove.append(o)
+    folder = [o for o in folder if o not in folders_to_remove]
+    # FIXME: Other Datasets
 
-    for o in folder:
+    for o in folder_done:
         if not os.path.isdir(o + '/Annotations'):  # for original Annotations
             # if not os.path.isdir(o + '/Annotations_corr'):  # for corrected Annotations
             print("Error: source annotation folder %s cannot be opened\n" % o)
@@ -47,11 +50,22 @@ def get_template(single_class, cocofolder):
 
 
 def get_frameid_and_date(o, f):
-    if 'birdrecorder-old' in o or 'birdrecorder-new' in o:  # for selecting old birdrecorder data or other datasets
+    if 'birdrecorder-old' in o:  # for selecting old birdrecorder data or other datasets
         # frame_id = int(re.search("([0-9]*)\.json", f)[1])
         frame_id = re.search("([0-9]{8})_([0-9]{6})_([0-9]{5})", f)  # our id consists of date + time + id
         frame_id = frame_id.group(1) + frame_id.group(2) + frame_id.group(3)
         date = frame_id[:8]
+    elif 'birdrecorder-new' in o:  # for selecting old birdrecorder data or other datasets
+        pattern = re.compile(r'snap_run(\d+)_cam(\d+)_cap(\d+)_(\d{8})T(\d{6})Z_static\.json')
+        match = pattern.match(f)
+        if match:
+            run_num = match.group(1).zfill(6)
+            cam_num = match.group(2)
+            cap_num = match.group(3).zfill(10)
+            date = match.group(4)
+            time = match.group(5)
+        frame_id = run_num + cam_num + cap_num + date + time
+
     elif 'sod4sb' in o:  # small-object-detection-for-spotting-birds dataset
         frame_id = re.search("([0-9]{3})_([0-9]{5})", f)
         frame_id = frame_id.group(1) + frame_id.group(2)
@@ -68,7 +82,6 @@ def get_jdata(o, f, use_corr=False):
         jdata = json.load(open(o + '/Annotations/' + f))  # for corrected Annotations
 
     return jdata
-
 
 
 def within_X_percent(dictionary, anno, categories, percentage=0.05):

@@ -7,7 +7,7 @@
 # annotations stored in MSCOCO format
 
 import argparse
-import os
+import os, sys
 import re
 import json
 import numpy as np
@@ -87,7 +87,8 @@ def main():
                         default=5)
     parser.add_argument('--cocofolder', type=str, help='folder with coco dataset to combine with (only train)',
                         default="")
-    parser.add_argument('--single-class', action='store_true', help='break down everything into one single class')
+    parser.add_argument('--single_class', action='store_true', help='break down everything into one single class')
+    parser.add_argument('--data_balancing', action='store_true', help='balance all classes', default=False)
 
     args = parser.parse_args()
 
@@ -178,6 +179,11 @@ def main():
                 print(e)
                 continue
 
+
+    print(f"len Train: {len(annotations['train2017'])}, len Val: {len(annotations['val2017'])}")
+    if len(annotations['val2017']) == 0:
+        print("\n[*] Not enough validation data!\n    Process will be killded!")
+        sys.exit()
     print("Classes:")
     print(json.dumps(classes, indent=1))
     print("Instances:")
@@ -226,9 +232,10 @@ def main():
 
                     # check if wanted class num is already reached # FXME NK: Just turned off, for sod4sb data e.g.
                     if 'birdrecorder-old' in o or 'birdrecorder-new' in o:
-                        balanced = within_X_percent(classes, anno, categories, 0.05)
-                        if not balanced:
-                            break  # looking for next anno
+                        if args.data_balancing:
+                            balanced = within_X_percent(classes, anno, categories, 0.05)
+                            if not balanced:
+                                break  # looking for next anno
 
                     bbox = [min(anno['points'][0][0], anno['points'][1][0]),
                             min(anno['points'][0][1], anno['points'][1][1]),
@@ -264,7 +271,7 @@ def main():
                             newanno["bbox"] = bbox
                             if args.single_class:
                                 # newanno["category_id"] = 1  # if we are using just one class and no COCO
-                                newanno["category_id"] = 81  # if we are using just one class and COCO
+                                newanno["category_id"] = len(classes)
                             else:
                                 newanno["category_id"] = anno['class']['id']
                             newanno["id"] = annoid
@@ -277,7 +284,8 @@ def main():
 
             # found and added annotations
             # image = loadImage(frame['frame_folder'] + '/Annotations/' + frame['imagePath']) # our images are in image folder
-            image = loadImage(frame['frame_folder'] + '/' + frame['imagePath'])
+            img_path = frame['frame_folder'] + '/' + frame['imagePath'].replace("../", "/") # fix '../'
+            image = loadImage(img_path)
             newimage = scale(crop(image, [offsetx, offsety, width, height]), [args.width, args.height])
             imagefilename = ('%06d.jpg' % cid)
             imagepath = args.destination_folder + '/' + dset + '/' + imagefilename
@@ -319,7 +327,7 @@ def main():
 
     for dset in da:
         json.dump(da[dset], open(args.destination_folder + '/annotations/instances_' + dset + '.json', 'w'), indent=2)
-    print("[*] Make Combined Dataset: Done!")
+    print("\n[*] Make Combined Dataset: Done!\n")
 
 
 if __name__ == '__main__':
