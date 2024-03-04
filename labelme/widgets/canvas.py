@@ -353,6 +353,13 @@ class Canvas(QtWidgets.QWidget):
 
         return False
 
+    def map_pixmap_point_to_scroll_area(self, point_on_pixmap: QtCore.QPoint):
+        scroll_area = self.parent().parent()
+        canvas_top_left = self.geometry().topLeft()
+        point_on_canvas = QtCore.QPoint(int(point_on_pixmap.x() * self.scale + canvas_top_left.x()),
+                                        int(point_on_pixmap.y() * self.scale + canvas_top_left.y()))
+        return self.mapTo(scroll_area, point_on_canvas)
+
     def mousePressEvent(self, ev):
         if QT5:
             pos = self.transformPos(ev.localPos())
@@ -609,7 +616,7 @@ class Canvas(QtWidgets.QWidget):
         # Try to move in one direction, and if it fails in another.
         # Give up if both fail.
         point = shapes[0][0]
-        offset = QtCore.QPoint(2.0, 2.0)
+        offset = QtCore.QPoint(int(round(2.0, 0)), int(round(2.0, 0)))
         self.offsets = QtCore.QPoint(), QtCore.QPoint()
         self.prevPoint = point
         if not self.boundedMoveShapes(shapes, point - offset):
