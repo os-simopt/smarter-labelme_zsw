@@ -62,6 +62,13 @@ categories = {
     "vogeloderinsekt": ["vogeloderinsekt", "insekt"],
 }
 
+sizes = {
+    "tiny": 6,
+    "small": 12,
+    "medium": 18,
+    "large": 22,
+}
+
 
 def map_subclass_to_class(subclass):
     for category, words in categories.items():
@@ -88,7 +95,8 @@ def main():
     parser.add_argument('--cocofolder', type=str, help='folder with coco dataset to combine with (only train)',
                         default="")
     parser.add_argument('--single_class', action='store_true', help='break down everything into one single class')
-    parser.add_argument('--data_balancing', action='store_true', help='balance all classes', default=False)
+    parser.add_argument('--data_class_balancing', action='store_true', help='balance all classes', default=False)
+    parser.add_argument('--data_size_balancing', action='store_true', help='balance anno size', default=False)
 
     args = parser.parse_args()
 
@@ -210,6 +218,7 @@ def main():
         print("extracting framecrops for %s" % dset)
         annoid = 0
         classes = {}
+        sizes = {}
         max_total_num = args.datasize if dset == 'train2017' else int(args.datasize * (args.test_percentage / 100))
         # max_class_num = max_total_num // len(categories)
         for cid in range(max_total_num):
@@ -232,10 +241,14 @@ def main():
 
                     # check if wanted class num is already reached # FXME NK: Just turned off, for sod4sb data e.g.
                     if 'birdrecorder-old' in o or 'birdrecorder-new' in o:
-                        if args.data_balancing:
+                        if args.data_class_balancing:
                             balanced = within_X_percent(classes, anno, categories, 0.05)
                             if not balanced:
                                 break  # looking for next anno
+                        #if args.data_size_balancing: # FIXME: Do Size Balancing
+                        #    balanced = within_X_percent(classes, anno, categories, 0.05)
+                        #    if not balanced:
+                        #        break  # looking for next anno
 
                     bbox = [min(anno['points'][0][0], anno['points'][1][0]),
                             min(anno['points'][0][1], anno['points'][1][1]),
