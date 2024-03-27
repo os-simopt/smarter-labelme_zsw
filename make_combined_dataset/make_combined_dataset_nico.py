@@ -52,8 +52,7 @@ def crop(image, dimensions):
 
 
 # define subclasses vogel, fluggeraet, vogeloderinsekt
-
-categories = {
+class_categories = {
     "vogel": ["artnichterkennbar", "bussard", "entenvogel", "falke", 'greifvogel', 'grossvogel',
               'habichtundsperber', 'kleinvogel', 'kolkrabe', 'kraehe', 'maeusebussard', 'milan',
               'mittelgrosservogel', 'reiher', 'rotmilan', 'schwarzmilan', 'taube', 'turmfalke', 'vogel',
@@ -62,20 +61,22 @@ categories = {
     "vogeloderinsekt": ["vogeloderinsekt", "insekt"],
 }
 
-sizes = {
+size_categories = {  # FIXME
     "tiny": 6,
     "small": 12,
     "medium": 18,
     "large": 22,
 }
 
+percentage_deviation = 0.5  # means x percentage between lowes and highest balance counter value
+
 
 def map_subclass_to_class(subclass):
-    for category, words in categories.items():
+    for category, words in class_categories.items():
         for word in words:
             if subclass.lower().startswith(word):
                 return category
-    return "OTHER"
+    return "sonstiges"
 
 
 def main():
@@ -99,10 +100,6 @@ def main():
     parser.add_argument('--data_size_balancing', action='store_true', help='balance anno size', default=False)
 
     args = parser.parse_args()
-
-    # print(f"folder: {args.folder}")
-    # print(f"destination_folder: {args.destination_folder}")
-    # print(f"single-class: {args.single_class}")
 
     rng = np.random.default_rng(seed=args.random)
 
@@ -170,15 +167,17 @@ def main():
                         else:
                             # fix subclasses
                             mapped_class = map_subclass_to_class(c)
-                            if args.single_class == True:
-                                rc = dclasses['avian'] # using avian as bird, insect or aircraft
-                            elif mapped_class != 'OTHER':
-                                rc = dclasses[mapped_class]
+                            if mapped_class != 'sonstiges':
+                                if args.single_class == True:
+                                    rc = dclasses['avian']  # using avian as bird, insect or aircraft
+                                else:
+                                    rc = dclasses[mapped_class]
 
                     if rc is not None:
                         shape['class'] = rc
                         jdata['useful_shapes'].append(shape)
-                        add(classes, rc['name'], 1)
+                        # add(classes, rc['name'], 1)
+                        add(classes, mapped_class, 1)
 
             except json.JSONDecodeError as e:
                 print(e)
@@ -186,7 +185,6 @@ def main():
             except Exception as e:
                 print(e)
                 continue
-
 
     print(f"len Train: {len(annotations['train2017'])}, len Val: {len(annotations['val2017'])}")
     if len(annotations['val2017']) == 0:
@@ -197,15 +195,6 @@ def main():
     print("Instances:")
     print(json.dumps(ids, indent=1))
 
-    # """ Balance Data """
-    # fill_classes_num = []
-    # max_class_num = max(classes.values())  # max class value in classes
-    # fill_classes_num = [max_class_num - value for key, value in
-    #                    classes.items()]  # create list of differences to max class value
-
-    ## just fill up
-    # while sum(fill_classes_num) > 0:  # solange nicht alle werte identisch
-
     da = {'train2017': copy.deepcopy(template), 'val2017': copy.deepcopy(template)}
     try:
         for dset in da:
@@ -214,16 +203,19 @@ def main():
     except:
         pass
 
+    #  --- TRAIN & VAL DATA ---
     for dset in da:
         print("extracting framecrops for %s" % dset)
         annoid = 0
-        classes = {}
-        sizes = {}
+        classes = {subclass: 0 for subclass in class_categories.keys()}
+        sizes = {subclass: 0 for subclass in size_categories.keys()}
+        # sizes = {}
         max_total_num = args.datasize if dset == 'train2017' else int(args.datasize * (args.test_percentage / 100))
         # max_class_num = max_total_num // len(categories)
         for cid in range(max_total_num):
-            print(cid)
+            print('\n', cid)
             print(classes)
+            print(sizes)
             found_annotations = 0
             while found_annotations == 0:
                 frameid = rng.choice(list(annotations[dset].keys()))
@@ -236,24 +228,39 @@ def main():
                 offsetx = rng.integers(1 + frame['imageWidth'] - width)
                 offsety = rng.integers(1 + frame['imageHeight'] - height)
                 scalefactor = args.width / float(width)
+                global_balanced = False  # used to avoid, getting only single annotated images, with only 1 crop due unbalanced insects balancing problem
 
                 for anno in frame['useful_shapes']:
 
+                    # class category balancing
                     # check if wanted class num is already reached # FXME NK: Just turned off, for sod4sb data e.g.
                     if 'birdrecorder-old' in o or 'birdrecorder-new' in o:
-                        if args.data_class_balancing:
-                            balanced = within_X_percent(classes, anno, categories, 0.05)
+                        if args.data_class_balancing and global_balanced == False:
+                            real_class_category = map_subclass_to_class(anno['label'])
+                            balanced = within_X_percent(classes, real_class_category, class_categories,
+                                                        percentage_deviation)
+                            # balanced = within_X_percent(classes, anno['class']['name'], categories, 0.20)
                             if not balanced:
                                 break  # looking for next anno
-                        #if args.data_size_balancing: # FIXME: Do Size Balancing
-                        #    balanced = within_X_percent(classes, anno, categories, 0.05)
-                        #    if not balanced:
-                        #        break  # looking for next anno
+                            else:
+                                global_balanced = True  # used to avoid, getting only single annotated images, with only 1 crop due unbalanced insects balancing problem
 
+                    # get bbox
                     bbox = [min(anno['points'][0][0], anno['points'][1][0]),
                             min(anno['points'][0][1], anno['points'][1][1]),
                             abs(anno['points'][0][0] - anno['points'][1][0]),
                             abs(anno['points'][0][1] - anno['points'][1][1])]
+                    size_category = get_size_category(bbox[2], bbox[3])  # FIXME
+
+                    # size balancing
+                    if args.data_size_balancing and global_balanced == False:
+                        balanced = within_X_percent(sizes, size_category, size_categories,
+                                                    percentage_deviation)  # FIXME
+                        if not balanced:
+                            break  # looking for next anno
+                        else:
+                            global_balanced = True  # used to avoid, getting only single annotated images, with only 1 crop due unbalanced insects balancing problem
+
                     if bbox[0] + bbox[2] >= offsetx and \
                             bbox[1] + bbox[3] >= offsety and \
                             bbox[0] < offsetx + width and \
@@ -278,7 +285,10 @@ def main():
                         if (bbox[2] > args.min_anno_size and bbox[3] > args.min_anno_size):
                             # valid annotation found - add to list
                             found_annotations += 1
-                            add(classes, anno['class']['name'], 1)
+                            real_class_category = map_subclass_to_class(anno['label'])
+                            add(classes, real_class_category, 1)
+                            # add(classes, anno['class']['name'], 1)
+                            add(sizes, size_category, 1)
                             newanno = {}
                             newanno["area"] = bbox[2] * bbox[3]
                             newanno["bbox"] = bbox
@@ -297,10 +307,10 @@ def main():
 
             # found and added annotations
             # image = loadImage(frame['frame_folder'] + '/Annotations/' + frame['imagePath']) # our images are in image folder
-            img_path = frame['frame_folder'] + '/' + frame['imagePath'].replace("../", "/") # fix '../'
+            img_path = frame['frame_folder'] + '/' + frame['imagePath'].replace("../", "/")  # fix '../'
             image = loadImage(img_path)
             newimage = scale(crop(image, [offsetx, offsety, width, height]), [args.width, args.height])
-            imagefilename = ('%06d.jpg' % cid)
+            imagefilename = ('%06d.png' % cid)
             imagepath = args.destination_folder + '/' + dset + '/' + imagefilename
             saveImage(imagepath, newimage)
             newimagemeta = {'file_name': imagefilename, 'width': args.width, 'height': args.height, 'id': cid}
@@ -309,7 +319,7 @@ def main():
         print("Classes:")
         print(json.dumps(classes, indent=1))
 
-        # reading coco data
+        #  --- ADDING COCO DATA ---
         if dset == 'train2017' and args.cocofolder != "":
             print("adding coco")
             cocoannos = json.load(open(args.cocofolder + '/annotations/instances_train2017.json'))
@@ -331,7 +341,7 @@ def main():
                         da[dset]['annotations'].append(newanno)
                         annoid += 1
                 oimagefilename = args.cocofolder + '/train2017/' + img['file_name']
-                imagefilename = ('%06d.jpg' % cid)
+                imagefilename = ('%06d.png' % cid)
                 nimg['file_name'] = imagefilename
                 nimg['id'] = cid
                 imagepath = args.destination_folder + '/' + dset + '/' + imagefilename

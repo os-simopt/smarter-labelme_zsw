@@ -2,6 +2,8 @@ import os
 from glob import glob
 import re
 import json
+import random
+import numpy as np
 
 
 def get_filelists(folder):
@@ -84,13 +86,20 @@ def get_jdata(o, f, use_corr=False):
     return jdata
 
 
-def within_X_percent(dictionary, anno, categories, percentage=0.05):
+def get_size_category(width, height):
+    categories = ["tiny", "small", "medium", "large"]
+    weights = [0.6, 0.2, 0.1, 0.1]  # Beispielgewichtung - ändere sie nach Bedarf an
+    category = random.choices(categories, weights=weights, k=1)[0]  # FIXME
+    return category
+
+
+def within_X_percent(dictionary, current_class, categories, percentage=0.05):
     """
     Check if all values in the dictionary are within a specified percentage deviation from the first value.
 
     Args:
         dictionary (dict): The input dictionary with string keys and numeric values.
-        anno (object): The current annotation object.
+        current_class (str): The current annotation class.
         percentage (float): The percentage deviation allowed for all values in the dictionary.
                             It should be a decimal number between 0 and 1.
 
@@ -108,8 +117,8 @@ def within_X_percent(dictionary, anno, categories, percentage=0.05):
     min_value = min(values)
 
     # return false if unbalanced (x% deviation)
-    if (max_value - min_value) / max_value > percentage:
-        current_class = anno['class']['name']
+    eps = np.finfo(float).eps  # to avoid divison by zero
+    if (max_value / (min_value + eps)) > (1 + percentage):
         current_min_class = min(dictionary, key=lambda k: dictionary[k])
         if current_class != current_min_class:
             return False
