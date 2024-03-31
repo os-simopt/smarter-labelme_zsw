@@ -293,8 +293,8 @@ def main():
                             newanno["area"] = bbox[2] * bbox[3]
                             newanno["bbox"] = bbox
                             if args.single_class:
-                                # newanno["category_id"] = 1  # if we are using just one class and no COCO
-                                newanno["category_id"] = len(classes)
+                                newanno["category_id"] = 1  # if we are using just one class and no COCO
+                                # newanno["category_id"] = len(classes)
                             else:
                                 newanno["category_id"] = anno['class']['id']
                             newanno["id"] = annoid

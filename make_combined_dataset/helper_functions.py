@@ -58,7 +58,7 @@ def get_frameid_and_date(o, f):
         frame_id = frame_id.group(1) + frame_id.group(2) + frame_id.group(3)
         date = frame_id[:8]
     elif 'birdrecorder-new' in o:  # for selecting old birdrecorder data or other datasets
-        pattern = re.compile(r'snap_run(\d+)_cam(\d+)_cap(\d+)_(\d{8})T(\d{6})Z_static\.json')
+        pattern = re.compile(r'snap_run(\d+)_(setup23_|)cam(\d+)_cap(\d+)_(\d{6}|\d{8})T(\d{6})Z(_static|)\.json')
         match = pattern.match(f)
         if match:
             run_num = match.group(1).zfill(6)
